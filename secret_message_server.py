@@ -1,48 +1,59 @@
-# Server code
-
 from scapy.all import *
 from scapy.layers.inet import UDP, IP
 
-def get_port_ascii_char(packet):
+
+def get_port_ascii_char(packet1):
     """
     Returns the ASCII character representation of the port of the packet if the packet is empty.
-    :param packet: the UDP packet to check
-    :return: ASCII character representation of the port if the packet is empty, otherwise an empty string
+    param packet1: The packet to check.
+    :return: The ASCII character for the port if packet is empty, otherwise an empty string.
     """
-    if is_empty_packet(packet):
-        port = packet[UDP].dport
-        if 97 <= port <= 123:  # Check if port is between 97 and 123
-            print(chr(port))
+    if UDP in packet1 and is_empty_packet(packet1):
+        port = packet1[UDP].dport
+        if 0 <= port <= 255:
             return chr(port)
     return ""
 
-def is_empty_packet(packet):
+
+def is_empty_packet(packet2):
     """
     Checks if a packet has an empty payload.
-    :param packet: the UDP packet to check
-    :return: True if packet is empty else False
+    param packet2: The packet to check.
+    :return: True if packet payload is empty else False.
     """
-    payload = packet[UDP].payload
-    print("is empty", len(payload) == 0)
-    return len(payload) == 0
+    return len(packet2[UDP].payload) == 0
 
-def sniff_packets(packet):
+
+def sniff_packets(packet3):
     """
-    Turns the packets sent to the message
-    :param packet: the UDP packet to decode
-    :return: None
+    Processes packets captured by sniffing based on certain criteria.
+    param packet3: The packet captured by sniffing.
     """
-    print("here1")
-    ascii_char = get_port_ascii_char(packet)
+    ascii_char = get_port_ascii_char(packet3)
     if ascii_char:
-        print(ascii_char, end="")
+        print(ascii_char, end="", flush=True)
+
+
+def test_functions():
+    """
+    Tests the functionality of other functions independently of network traffic.
+    """
+    packet4 = IP() / UDP(dport=65) / ""
+    assert get_port_ascii_char(packet4) == 'A', "get_port_ascii_char did not return expected ASCII character for 'A'."
+    assert is_empty_packet(packet4) == True, "is_empty_packet did not identify an empty packet correctly."
+
 
 def main():
     """
-    the main function
-    :return: None
+    Main function to start packet sniffing.
     """
-    sniff(prn=sniff_packets, filter="udp and dst portrange 97-123", store=0)
+    sniff(prn=sniff_packets, filter="udp and dst portrange 0-255", store=0)
+
 
 if __name__ == '__main__':
-    main()
+    try:
+        test_functions()  # Run assertions before main
+        main()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
